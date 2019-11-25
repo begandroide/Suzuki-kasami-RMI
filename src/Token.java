@@ -42,30 +42,61 @@ public class Token implements Serializable {
         return null;
     }
 
-    public int getLni(int position) {
-        return ln[position];
+    /**
+     * Obtener numero de secuencia LN[position] del proceso
+     * @param index posicion del proceso 
+     * @return numero de secuencia registrado en LN
+     */
+    public int getLni(int index) {
+        return ln[index];
     }
 
-    public void setLni(int position, int value) {
-        ln[position] = value;
+    /**
+     * Registrar numero de secuencia en LN del proceso
+     * @param index indice en LN
+     * @param value valor a registrar
+     */
+    public void setLni(int index, int value) {
+        ln[index] = value;
     }
 
+    /**
+     * Verificar si Cola contiene al proceso id
+     * @param id id del proceso a verificar
+     * @return Si el id del proceso está en la cola o no.
+     */
     public Boolean queueContains(int id) {
         return queue.contains(id);
     }
 
+    /**
+     * Verificar si Cola esta vacía
+     * @return
+     */
     public Boolean queueIsEmpty() {
         return queue.isEmpty();
     }
 
+    /**
+     * Añadir id de proceso a la Cola
+     * @param id id del proceso
+     */
     public void addId(int id) {
         queue.add(id);
     }
 
+    /**
+     * Remover elemento en cabeza de la Cola
+     * @return id del proceso removido
+     */
     public int popId() {
         return queue.remove();
     }
-
+    
+    /**
+     * Obtener la capacidad de extracción permitido
+     * @return capacidad
+     */
     public static int getCapacity(){
         return capacity;
     }
