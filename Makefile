@@ -21,11 +21,9 @@ SRC = $(shell find ./src -type f)
 
 OBJ = $(SRC:.java=.class)
 
-RMIFLAGS = -Djava.security.policy=java.policy
-
 JC = javac
 
-JAVAC_COMPILE = $(JC) $(J_DIRECTORY_SOURCE) $(J_DIRECTORY_CLASS)
+JAVAC_COMPILE = $(JC) $(J_DIRECTORY_SOURCE) $(J_DIRECTORY_CLASS) 
 
 #-----------------------------------------------------------------------
 # Default Java compilation

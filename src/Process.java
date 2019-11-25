@@ -1,6 +1,7 @@
 import java.net.MalformedURLException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.ArrayList;
@@ -43,21 +44,26 @@ public class Process {
         int processIndex = 0;
         for (String url : urls) {
             Suzuki_kasami_rmi process;
+
             try {
                 process = new Suzuki_kasami(urls, processIndex);
-                Naming.bind(url, process);
                 processIndex++;
                 processes.add(new ProcessThread(process));
-
-            } catch (RemoteException e1) {
-                e1.printStackTrace();
-            } catch (MalformedURLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (AlreadyBoundException e) {
+                try {
+                    Naming.bind(url, process);
+                } catch (MalformedURLException | AlreadyBoundException e) {
+                    try {
+                        Naming.rebind(url, process);
+                    } catch (MalformedURLException e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                    }
+                }
+            } catch (RemoteException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
+
 
         }
         System.out.println("INSTANCIACION TOKEN");
@@ -73,6 +79,9 @@ public class Process {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+
+
+        
 
     }
 

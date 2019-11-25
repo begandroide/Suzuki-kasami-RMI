@@ -115,6 +115,15 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
     }
 
     public void kill() throws RemoteException {
+        try {
+            Naming.unbind(urls[index]);
+        } catch (MalformedURLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (NotBoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         System.exit(0);
     }
 
