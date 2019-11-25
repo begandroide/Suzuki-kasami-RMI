@@ -1,3 +1,4 @@
+package RMI;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -9,7 +10,7 @@ public interface Suzuki_kasami_rmi extends Remote {
      * archivo que ingresa a procesos
      * @throws RemoteException
      */
-    public void extract() throws RemoteException;
+    public void compute() throws RemoteException;
 
     /**
      * registra una peticion (request) de un proceso (remoto)

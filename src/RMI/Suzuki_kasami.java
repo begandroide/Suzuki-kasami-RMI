@@ -1,3 +1,4 @@
+package RMI;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -48,7 +49,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
      * @param index index of current process
      * @throws RemoteException if RMI mechanisms fail
      */
-    protected Suzuki_kasami(String[] urls, int index) throws RemoteException {
+    public Suzuki_kasami(String[] urls, int index) throws RemoteException {
         super();
 
         this.index = index;
@@ -73,6 +74,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
     public void extract() throws RemoteException {
         inCriticalSection = true;
         //de seguro tenemos token
+        System.out.println("Proceso extractor");
     }
 
     public void request(int id, int seq) throws RemoteException {
@@ -85,6 +87,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
             if(index != id && (RN.get(id) > token.getLni(id))){
                 String url = "rmi://localhost/process" + id;
                 try {
+                    System.out.println("regalando token");
                     Suzuki_kasami_rmi dest = (Suzuki_kasami_rmi) Naming.lookup(url);
                     dest.takeToken(token);
                     token = null;
@@ -107,44 +110,38 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
     }
 
     public void takeToken(Token token) throws RemoteException {
+        System.out.println("token tomado");
         this.token = token;
     }
 
     public void kill() throws RemoteException {
-
+        System.exit(0);
     }
 
-    private void criticalSectionWrapper() throws RemoteException, MalformedURLException, NotBoundException {
+    public void compute() throws RemoteException {
         //broadcast request
         RN.set(index, RN.get(index) + 1);
         for (String url : urls) {
-            Suzuki_kasami_rmi dest = (Suzuki_kasami_rmi) Naming.lookup(url);
+            Suzuki_kasami_rmi dest;
             try {
+                dest = (Suzuki_kasami_rmi) Naming.lookup(url);
                 dest.request(index,RN.get(index));
+            } catch (MalformedURLException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            } catch (NotBoundException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
         }
+        System.out.println("wait token");
         waitToken();
+        System.out.println("enter extract");
         extract();
-        leaveToken();
-    }
-
-
-    private void leaveToken() {
-        token.setLni(index, token.getLni(index) + 1);
-        
-        inCriticalSection = false;
-
-    }
-
-    public void run() {
-        // TODO Auto-generated method stub
         try {
-            criticalSectionWrapper();
-        } catch (RemoteException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            leaveToken();
         } catch (MalformedURLException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -152,6 +149,41 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+
+    private void leaveToken() throws MalformedURLException, RemoteException, NotBoundException {
+        token.setLni(index, token.getLni(index) + 1);
+        for (int i = 0; i < numProcesses; i++) {
+            if(!token.queueContains(i)){
+                if ( RN.get(i) == (token.getLni(i) + 1) ){
+                    token.addId(i);
+                }
+            }
+        }
+        //si la cola no esta vacia
+        if(!token.queueIsEmpty()){
+            int idProcess = token.popId();
+            String url = "rmi://localhost/process" + idProcess;
+            Suzuki_kasami_rmi dest = (Suzuki_kasami_rmi) Naming.lookup(url);
+            dest.takeToken(token);
+            token = null;
+        } else {
+            //?todos listos?
+            for (String url : urls) {
+                if(!url.contains(String.valueOf(index) )){
+                    Suzuki_kasami_rmi dest = (Suzuki_kasami_rmi) Naming.lookup(url);
+                    dest.kill();
+                }
+            }
+            kill();            
+        }
+        inCriticalSection = false;
+
+    }
+
+    public void run() {
+        System.out.println("comenzó proceso: " + index);
     }
 
 }

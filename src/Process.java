@@ -1,28 +1,76 @@
+import java.net.MalformedURLException;
+import java.rmi.AlreadyBoundException;
+import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.util.ArrayList;
+
+import RMI.Suzuki_kasami;
+import RMI.Suzuki_kasami_rmi;
+import RMI.Token;
 
 public class Process {
-    
-    private static String URL_PREFIX = "rmi://localhost/process%d"; 
+
+    private static String URL_PREFIX = "rmi://localhost/process%d";
+
     public static void main(String[] args) {
         int numProcesses = 0;
 
-        if( args[1].isEmpty()){
-            System.out.println("Uso: java Process <num_processes>");
+        if (args[0].isEmpty()) {
+            System.out.println("Uso: java Process <num_processes> <capacity>");
             System.exit(1);
         }
 
-        numProcesses = Integer.parseInt(args[1]);
+        numProcesses = Integer.parseInt(args[0]);
+        int capacity = Integer.parseInt(args[1]);
+
         String[] urls = new String[numProcesses];
-        
+
         for (int i = 0; i < urls.length; i++) {
-            urls[i] = String.format(URL_PREFIX, numProcesses);
+            urls[i] = String.format(URL_PREFIX, i);
         }
-        //RMI init
-        try{
-            
-            LocateRegistry.createRegistry(1099);
-        } catch(RemoteException e){
+        // RMI init
+        try {
+
+            LocateRegistry.getRegistry();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+
+        ArrayList<ProcessThread> processes = new ArrayList<ProcessThread>();
+
+        // locate processes
+        int processIndex = 0;
+        for (String url : urls) {
+            Suzuki_kasami_rmi process;
+            try {
+                process = new Suzuki_kasami(urls, processIndex);
+                Naming.bind(url, process);
+                processIndex++;
+                processes.add(new ProcessThread(process));
+
+            } catch (RemoteException e1) {
+                e1.printStackTrace();
+            } catch (MalformedURLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (AlreadyBoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+        }
+        System.out.println("INSTANCIACION TOKEN");
+        Token token = Token.instantiate(numProcesses, capacity, "../README.md");
+
+        for (int i = 0; i < urls.length; i++) {
+            new Thread(processes.get(i)).start();
+        }
+        System.out.println("dando token");
+        try {
+            processes.get(0).process.takeToken(token);
+        } catch (RemoteException e) {
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 

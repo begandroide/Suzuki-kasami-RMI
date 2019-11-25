@@ -6,6 +6,7 @@
 J_DIRECTORY_CLASS_FLAG = -d
 # Specify the path where to place .class files
 J_DIRECTORY_CLASS_PATH = ./bin/
+
 # Specify where to place generated class files
 J_DIRECTORY_CLASS = $(J_DIRECTORY_CLASS_FLAG) $(J_DIRECTORY_CLASS_PATH)
 
@@ -19,6 +20,8 @@ J_DIRECTORY_SOURCE = $(J_DIRECTORY_SOURCE_FLAG) $(J_DIRECTORY_SOURCE_PATH)
 SRC = $(shell find ./src -type f)
 
 OBJ = $(SRC:.java=.class)
+
+RMIFLAGS = -Djava.security.policy=java.policy
 
 JC = javac
 
@@ -41,11 +44,12 @@ bin :
 # Clean up but keep executables
 clean :
 	rm -Rfv bin/*
-	rm ./*.class
 
 # Détruit également le dossier bin
 fullclean : clean
 	rmdir ./bin
+	killall rmiregistry; 
+	echo "\nHecho"
 
-runserver:
-	java 
+runrmiregister:
+	cd $(J_DIRECTORY_CLASS_PATH); exec rmiregistry &
