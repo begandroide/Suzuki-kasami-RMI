@@ -3,6 +3,7 @@ package RMI;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -46,7 +47,8 @@ public class Token implements Serializable {
 
     /**
      * Obtener numero de secuencia LN[position] del proceso
-     * @param index posicion del proceso 
+     * 
+     * @param index posicion del proceso
      * @return numero de secuencia registrado en LN
      */
     public int getLni(int index) {
@@ -55,6 +57,7 @@ public class Token implements Serializable {
 
     /**
      * Registrar numero de secuencia en LN del proceso
+     * 
      * @param index indice en LN
      * @param value valor a registrar
      */
@@ -64,6 +67,7 @@ public class Token implements Serializable {
 
     /**
      * Verificar si Cola contiene al proceso id
+     * 
      * @param id id del proceso a verificar
      * @return Si el id del proceso está en la cola o no.
      */
@@ -73,6 +77,7 @@ public class Token implements Serializable {
 
     /**
      * Verificar si Cola esta vacía
+     * 
      * @return
      */
     public Boolean queueIsEmpty() {
@@ -81,6 +86,7 @@ public class Token implements Serializable {
 
     /**
      * Añadir id de proceso a la Cola
+     * 
      * @param id id del proceso
      */
     public void addId(int id) {
@@ -89,17 +95,31 @@ public class Token implements Serializable {
 
     /**
      * Remover elemento en cabeza de la Cola
+     * 
      * @return id del proceso removido
      */
     public int popId() {
         return queue.remove();
     }
-    
+
     /**
      * Obtener la capacidad de extracción permitido
+     * 
      * @return capacidad
      */
-    public static int getCapacity(){
+    public static int getCapacity() {
         return capacity;
+    }
+
+    public String readByCapacity() {
+        char[] readed = new char[capacity];
+        try {
+            reader.read(readed, 0, capacity);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return String.copyValueOf(readed);
     }
 }

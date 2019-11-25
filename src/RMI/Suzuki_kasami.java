@@ -72,9 +72,9 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
     }
 
     public void extract() throws RemoteException {
-        inCriticalSection = true;
         //de seguro tenemos token
         System.out.println("Proceso extractor");
+        System.out.println(token.readByCapacity());
     }
 
     public void request(int id, int seq) throws RemoteException {
@@ -111,6 +111,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
 
     public void takeToken(Token token) throws RemoteException {
         System.out.println("token tomado");
+        inCriticalSection = true;
         this.token = token;
     }
 
