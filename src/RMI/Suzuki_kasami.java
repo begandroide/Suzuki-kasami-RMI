@@ -8,6 +8,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import RMI.ProcessState.Status;
+
 public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_rmi, Runnable {
 
     /**
@@ -40,7 +42,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
     /**
      * Estado del proceso
      */
-    private ProcessStatus status = ProcessStatus.IDLE;
+    private ProcessState processState;
 
     /**
      * Default constructor following RMI conventions
@@ -57,6 +59,11 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
         this.numProcesses = urls.length;
 
         reset();
+        printStatus();
+    }
+
+    private void printStatus(){
+        System.out.println("Proceso " + index + " en estado " + processState.toString());
     }
 
     public void reset() {
@@ -65,6 +72,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
         for (int i = 0; i < numProcesses; i++) {
             RN.add(0);
         }
+        processState = new ProcessState();
 
         token = null;
         inCriticalSection = false;
@@ -72,7 +80,6 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
 
     public void extract() throws RemoteException {
         //de seguro tenemos token
-        System.out.println("Proceso extractor");
         System.out.println(token.readByCapacity());
     }
 
@@ -99,6 +106,8 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
     }
 
     public void waitToken() throws RemoteException {
+        processState.status = Status.WAITINGTOKEN;
+        printStatus();
         while (token == null) {
             try {
                 Thread.sleep(TOKEN_WAIT_DELAY);
@@ -109,9 +118,11 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
     }
 
     public void takeToken(Token token) throws RemoteException {
-        System.out.println("token tomado");
+        System.out.println("token tomado proceso " + index);
         inCriticalSection = true;
         this.token = token;
+        processState.status = Status.CRITICALSECTION;
+        printStatus();
     }
 
     public void kill() throws RemoteException {
@@ -143,9 +154,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 throw new RuntimeException(e);
             }
         }
-        System.out.println("wait token");
         waitToken();
-        System.out.println("enter extract");
         extract();
         try {
             leaveToken();
@@ -172,6 +181,8 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
             Suzuki_kasami_rmi dest = (Suzuki_kasami_rmi) Naming.lookup(url);
             dest.takeToken(token);
             token = null;
+            processState.status = Status.IDLE;
+            printStatus();
         } else {
             //?todos listos?
             for (String url : urls) {
@@ -190,7 +201,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
      * Multithreads
      */
     public void run() {
-        System.out.println("comenzó proceso: " + index);
+        // System.out.println("comenzó proceso: " + index);
     }
 
 }

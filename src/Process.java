@@ -10,7 +10,6 @@ import RMI.Suzuki_kasami;
 import RMI.Suzuki_kasami_rmi;
 import RMI.Token;
 
-
 public class Process {
 
     private static String URL_PREFIX = "rmi://localhost/process%d";
@@ -65,7 +64,6 @@ public class Process {
                 e.printStackTrace();
             }
 
-
         }
         System.out.println("INSTANCIACION TOKEN");
         Token token = Token.instantiate(numProcesses, capacity, "../README.md");
@@ -73,7 +71,12 @@ public class Process {
         for (int i = 0; i < urls.length; i++) {
             new Thread(processes.get(i)).start();
         }
-        System.out.println("dando token");
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
         try {
             processes.get(0).process.takeToken(token);
         } catch (RemoteException e) {
