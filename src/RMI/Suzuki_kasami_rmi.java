@@ -6,11 +6,10 @@ import java.rmi.RemoteException;
 public interface Suzuki_kasami_rmi extends Remote {
 
     /**
-     * acceso a sección crítica, extrae n letras del
-     * archivo que ingresa a procesos
+     * Petición de ingresar a extracción de letras
      * @throws RemoteException
      */
-    public void compute() throws RemoteException;
+    public void initializeExtractProcess() throws RemoteException;
 
     /**
      * registra una peticion (request) de un proceso (remoto)

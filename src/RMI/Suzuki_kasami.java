@@ -38,9 +38,9 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
     private boolean inCriticalSection = false;
 
     /**
-     * Is true after the computations are done, is needed for debug purposes
+     * Estado del proceso
      */
-    private boolean computationFinished = false;
+    private ProcessStatus status = ProcessStatus.IDLE;
 
     /**
      * Default constructor following RMI conventions
@@ -68,7 +68,6 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
 
         token = null;
         inCriticalSection = false;
-        computationFinished = false;
     }
 
     public void extract() throws RemoteException {
@@ -128,7 +127,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
         System.exit(0);
     }
 
-    public void compute() throws RemoteException {
+    public void initializeExtractProcess() throws RemoteException {
         //broadcast request
         RN.set(index, RN.get(index) + 1);
         for (String url : urls) {
@@ -137,10 +136,8 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 dest = (Suzuki_kasami_rmi) Naming.lookup(url);
                 dest.request(index,RN.get(index));
             } catch (MalformedURLException e1) {
-                // TODO Auto-generated catch block
                 e1.printStackTrace();
             } catch (NotBoundException e1) {
-                // TODO Auto-generated catch block
                 e1.printStackTrace();
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
@@ -152,17 +149,14 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
         extract();
         try {
             leaveToken();
-        } catch (MalformedURLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (NotBoundException e) {
-            // TODO Auto-generated catch block
+        } catch (MalformedURLException | NotBoundException e) {
             e.printStackTrace();
         }
+        
     }
 
 
-    private void leaveToken() throws MalformedURLException, RemoteException, NotBoundException {
+    private void leaveToken() throws RemoteException, MalformedURLException, NotBoundException {
         token.setLni(index, token.getLni(index) + 1);
         for (int i = 0; i < numProcesses; i++) {
             if(!token.queueContains(i)){
@@ -192,6 +186,9 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
 
     }
 
+    /**
+     * Multithreads
+     */
     public void run() {
         System.out.println("comenzó proceso: " + index);
     }

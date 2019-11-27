@@ -1,7 +1,7 @@
+
 import java.net.MalformedURLException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.ArrayList;
@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import RMI.Suzuki_kasami;
 import RMI.Suzuki_kasami_rmi;
 import RMI.Token;
+
 
 public class Process {
 

@@ -13,7 +13,7 @@ public class ProcessThread implements Runnable {
     @Override
     public void run() {
         try{
-            process.compute();
+            process.initializeExtractProcess();
         } catch (RemoteException e){
             throw new RuntimeException(e);
         }
