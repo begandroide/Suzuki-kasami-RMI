@@ -184,15 +184,21 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                         printStatus();
                 } else {
                         // ?todos listos?
-                        System.out.println("recurso restante: " + token.getCharactersRemaining());
-
-                        for (String url : urls) {
-                                if (!url.contains(String.valueOf(index))) {
-                                        Suzuki_kasami_rmi dest = (Suzuki_kasami_rmi) Naming.lookup(url);
-                                        dest.kill();
+                        int leftCharacts = token.getCharactersRemaining();
+                        System.out.println("recurso restante: " + leftCharacts);
+                        if(leftCharacts>0){
+                                //solicitar el token para una nueva ronda
+                                this.initializeExtractProcess();
+                        } else{
+                                for (String url : urls) {
+                                        if (!url.contains(String.valueOf(index))) {
+                                                Suzuki_kasami_rmi dest = (Suzuki_kasami_rmi) Naming.lookup(url);
+                                                dest.kill();
+                                        }
                                 }
+                                kill();
                         }
-                        kill();
+
                 }
                 inCriticalSection = false;
 

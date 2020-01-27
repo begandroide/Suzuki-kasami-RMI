@@ -142,7 +142,11 @@ public class Token implements Serializable {
                 } catch (IOException e) {
                         e.printStackTrace();
                 }
-                charactersRemaining -= capacity;
+                if(charactersRemaining < capacity){
+                        charactersRemaining = 0;
+                } else{
+                        charactersRemaining -= capacity;
+                }
                 return String.copyValueOf(readed);
         }
 }
