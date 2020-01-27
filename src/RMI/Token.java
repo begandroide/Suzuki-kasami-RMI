@@ -21,6 +21,7 @@ public class Token implements Serializable {
         private static Boolean isInstantiated = false;
         private static BufferedReader reader;
         private static int charactersRemaining;
+        private static  int initialCharacters;
 
         private Token(int numProcess) {
                 queue = new LinkedList<Integer>();
@@ -57,6 +58,7 @@ public class Token implements Serializable {
                 while ((data = reader.readLine()) != null) {
                         charactersRemaining += data.length();
                 }
+                initialCharacters = charactersRemaining;
                 return charactersRemaining;
         }
 
@@ -135,17 +137,15 @@ public class Token implements Serializable {
                 return charactersRemaining;
         }
 
-        public String readByCapacity() {
-                char[] readed = new char[capacity];
+        public String readCharacter() {
+                char[] readed = new char[1];
                 try {
-                        reader.read(readed, 0, capacity);
+                        reader.read(readed, 0, 1);
                 } catch (IOException e) {
                         e.printStackTrace();
                 }
-                if(charactersRemaining < capacity){
-                        charactersRemaining = 0;
-                } else{
-                        charactersRemaining -= capacity;
+                if(charactersRemaining > 0){
+                        charactersRemaining -= 1;
                 }
                 return String.copyValueOf(readed);
         }

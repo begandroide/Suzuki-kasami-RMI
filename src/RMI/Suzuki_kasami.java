@@ -37,6 +37,8 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
         private String[] urls;
 
         private Token token = null;
+        private int capacity = 0;
+        private long velocity = 1;
         private boolean inCriticalSection = false;
 
         /**
@@ -51,13 +53,15 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
          * @param index index of current process
          * @throws RemoteException if RMI mechanisms fail
          */
-        public Suzuki_kasami(String[] urls, int index) throws RemoteException {
+        public Suzuki_kasami(String[] urls, int index, int capacity, int velocity) throws RemoteException {
                 super();
 
                 this.index = index;
                 this.urls = urls;
                 this.numProcesses = urls.length;
-
+                this.capacity = capacity;
+                this.velocity = (long) ((1. / velocity) * 1000);
+                System.out.println("VELOCIDAD: " + this.velocity);
                 reset();
                 printStatus();
         }
@@ -80,7 +84,18 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
 
         public void extract() throws RemoteException {
                 // de seguro tenemos token
-                System.out.println(token.readByCapacity());
+                int saca = Math.min(token.getCharactersRemaining(), capacity);
+                for (int i = 0; i < saca; i++) {
+                        System.out.print(token.readCharacter());
+                        try {
+                                Thread.sleep(velocity);
+                        } catch (InterruptedException e) {
+                                e.printStackTrace();
+                        }
+                }
+                if(saca > 0){
+                        System.out.println();
+                }
         }
 
         public void request(int id, int seq) throws RemoteException {

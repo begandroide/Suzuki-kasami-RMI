@@ -17,14 +17,14 @@ public class Process {
         public static void main(String[] args) {
                 int numProcesses = 0;
 
-                if (args[0].isEmpty()) {
-                        System.out.println("Uso: java Process <num_processes> <capacity>");
+                if (args.length < 3) {
+                        System.out.println("Uso: java Process <num_processes> <capacity> <velocity>");
                         System.exit(1);
                 }
 
                 numProcesses = Integer.parseInt(args[0]);
                 int capacity = Integer.parseInt(args[1]);
-
+                int velocity = Integer.parseInt(args[2]);
                 String[] urls = new String[numProcesses];
 
                 for (int i = 0; i < urls.length; i++) {
@@ -46,7 +46,7 @@ public class Process {
                         Suzuki_kasami_rmi process;
 
                         try {
-                                process = new Suzuki_kasami(urls, processIndex);
+                                process = new Suzuki_kasami(urls, processIndex,capacity,velocity);
                                 processIndex++;
                                 processes.add(new ProcessThread(process));
                                 try {
