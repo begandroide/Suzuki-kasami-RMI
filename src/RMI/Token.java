@@ -20,6 +20,7 @@ public class Token implements Serializable {
     private static int capacity;
     private static Boolean isInstantiated = false;
     private static BufferedReader reader;
+    private static int charactersRemaining;
 
     private Token(int numProcess) {
         queue = new LinkedList<Integer>();
@@ -33,24 +34,38 @@ public class Token implements Serializable {
         if (!isInstantiated) {
             isInstantiated = true;
             capacity = inCapacity;
-            try {
-                reader = new BufferedReader(new FileReader(fileName));
-            } catch (FileNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+                try {
+                        reader = new BufferedReader(new FileReader(fileName));
+                        //saber cantidad de recurso (letras) disponibles
+                        charactersRemaining = countInitialResources();
+                        reader.close();
+                        reader = new BufferedReader(new FileReader(fileName));
+                } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                } catch (IOException e) {
+                        e.printStackTrace();
+                }
+                System.out.println("recurso inicial:" + charactersRemaining);
             return new Token(numProcesses);
         }
 
         return null;
     }
 
-    /**
-     * Obtener numero de secuencia LN[position] del proceso
-     * 
-     * @param index posicion del proceso
-     * @return numero de secuencia registrado en LN
-     */
+        private static int countInitialResources() throws IOException {
+                String data;        
+                while((data = reader.readLine()) != null) {
+                        charactersRemaining += data.length();                        
+                }            
+                return charactersRemaining;
+        }
+
+        /**
+         * Obtener numero de secuencia LN[position] del proceso
+         * 
+         * @param index posicion del proceso
+         * @return numero de secuencia registrado en LN
+         */
     public int getLni(int index) {
         return ln[index];
     }
@@ -111,15 +126,23 @@ public class Token implements Serializable {
         return capacity;
     }
 
+    /**
+     * Obtener la cantidad de caracteres restantes
+     * 
+     * @return capacidad
+     */
+    public int getCharactersRemaining(){
+            return charactersRemaining;
+    }
+
     public String readByCapacity() {
         char[] readed = new char[capacity];
         try {
             reader.read(readed, 0, capacity);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
+        charactersRemaining -= capacity;
         return String.copyValueOf(readed);
     }
 }

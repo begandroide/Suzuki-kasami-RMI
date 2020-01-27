@@ -185,6 +185,8 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
             printStatus();
         } else {
             //?todos listos?
+            System.out.println("recurso restante: " + token.getCharactersRemaining());
+
             for (String url : urls) {
                 if(!url.contains(String.valueOf(index) )){
                     Suzuki_kasami_rmi dest = (Suzuki_kasami_rmi) Naming.lookup(url);
