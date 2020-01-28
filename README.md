@@ -32,4 +32,4 @@ Donde
 - capacity: Cantidad de letras que puede extraer cada proceso en cada sección crítica
 - velocity: Extraemos letra por letra, velocidad es el tiempo de diferencia entre extraer una letra y otra.
 - delay: Cuanto esperamos para dar el token desde el thread principal
-- bearer: preguntas
+- bearer: id del proceso que tendrá el token
