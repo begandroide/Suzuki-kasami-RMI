@@ -2,6 +2,7 @@
 import java.net.MalformedURLException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -56,18 +57,18 @@ public class Main {
                         e.printStackTrace();
                 }
                 int indexProcess = 0;
-                System.out.println("endpoints");
-                for (String string : endPoints) {
-                        System.out.println(string);
-                }
-                System.out.println("fin endpoints");
+                // System.out.println("endpoints");
+                // for (String string : endPoints) {
+                //         System.out.println(string);
+                // }
+                // System.out.println("fin endpoints");
                 if (endPoints.length > 0) {
                         String endString = endPoints[endPoints.length - 1];
                         Pattern pattern = Pattern.compile(URL_REGEX);
 
                         Matcher matcher = pattern.matcher(endString);
                         if (matcher.matches()) {
-                                indexProcess = Integer.valueOf(matcher.group(1)) +1;
+                                indexProcess = Integer.valueOf(matcher.group(1)) + 1;
                                 System.out.println("indice actual proceso " + indexProcess);
                         } else {
                                 System.out.println("ha ocurrido un problema al ligar el url rmi");
@@ -86,7 +87,7 @@ public class Main {
                 }
 
                 Token token = null;
-                if(bearer){
+                if (bearer) {
                         System.out.println("INSTANCIACION TOKEN");
                         token = new Token(numProcesses, capacity, "../testfile");
                 }
@@ -103,25 +104,9 @@ public class Main {
                 } catch (RemoteException e) {
                         e.printStackTrace();
                 }
-                // try {
-                //         process.takeToken(token);
-                // } catch (RemoteException e) {
-                //         e.printStackTrace();
-                // }
 
-                // try {
-                //         registry.unbind(urls[indexProcess]);
-                //         Naming.unbind(urls[indexProcess]);
-                // } catch (MalformedURLException e) {
-                //         // TODO Auto-generated catch block
-                //         e.printStackTrace();
-                // } catch (RemoteException e) {
-                //         // TODO Auto-generated catch block
-                //         e.printStackTrace();
-                // } catch (NotBoundException e) {
-                //         // TODO Auto-generated catch block
-                //         e.printStackTrace();
-                // }
+                System.out.println("Proceso de extracción terminado");
+                System.exit(0);
 
         }
 

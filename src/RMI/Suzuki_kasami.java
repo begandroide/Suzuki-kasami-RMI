@@ -93,7 +93,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
         public void extract() throws RemoteException {
                 // de seguro tenemos token
                 int saca = Math.min(token.getCharactersRemaining(), capacity);
-                System.out.println("saca:" + saca);
+                System.out.println("Extracción:");
                 for (int i = 0; i < saca; i++) {
                         System.out.print(token.readCharacter());
                         try {
@@ -102,7 +102,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                                 e.printStackTrace();
                         }
                 }
-                System.out.println("quedan: " + token.getCharactersRemaining());
+                // System.out.println("quedan: " + token.getCharactersRemaining());
                 if (saca > 0) {
                         System.out.println();
                 }
@@ -123,7 +123,6 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                                         int leftCharacts = token.getCharactersRemaining();
                                         dest.takeToken(token);
                                         token = null;
-                                        System.out.println("recurso restante: " + leftCharacts);
                                         if (leftCharacts > 0) {
                                                 // solicitar el token para una nueva ronda
                                                 try {
@@ -155,7 +154,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
 
         public void takeToken(Token token) throws RemoteException {
                 System.out.println("token tomado proceso " + index);
-                System.out.println("token viene con " + token.getCharactersRemaining());
+                // System.out.println("token viene con " + token.getCharactersRemaining());
                 inCriticalSection = true;
                 this.token = (Token) token;
                 processState.status = Status.CRITICALSECTION;
@@ -185,11 +184,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                         try {
                                 dest = (Suzuki_kasami_rmi) Naming.lookup(url);
                                 dest.request(index, RN.get(index));
-                        } catch (MalformedURLException e1) {
-                                e1.printStackTrace();
-                        } catch (NotBoundException e1) {
-                                e1.printStackTrace();
-                        } catch (RemoteException e) {
+                        } catch (MalformedURLException |NotBoundException | RemoteException e) {
                                 throw new RuntimeException(e);
                         }
                 }
@@ -204,7 +199,6 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 extract();
                 try {
                         leaveToken();
-                        printRN();
                 } catch (MalformedURLException | NotBoundException e) {
                         e.printStackTrace();
                 }
@@ -225,47 +219,26 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 Suzuki_kasami_rmi dest = null;
                 int leftCharacts = token.getCharactersRemaining();
                 if (!token.queueIsEmpty()) {
-                        System.out.println("la cola no esta vacia");
                         int idProcess = token.popId();
                         System.out.println("token se va a :" + idProcess);
                         url = "rmi://localhost/process" + idProcess;
                         dest = (Suzuki_kasami_rmi) Naming.lookup(url);
-                        System.out.println("token se va con " + token.getCharactersRemaining());
                         dest.takeToken(token);
                         token = null;
+
                         processState.status = Status.IDLE;
                         printStatus();
-                        
-                        System.out.println("recurso restante: " + leftCharacts);
-                        if (leftCharacts > 0) {
-                                // solicitar el token para una nueva ronda
-                                try {
-                                        Thread.sleep(cooling);
-                                } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                }
-                                this.initializeExtractProcess(null);
-                        }
-                } else {
-                        // todos listos?
-                        if (leftCharacts > 0) {
-                                // solicitar el token para una nueva ronda
-                                try {
-                                        Thread.sleep(cooling);
-                                } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                }
-                                this.initializeExtractProcess(null);
-                        } else{
-                                for (String uri : urls) {
-                                        if (!uri.contains(String.valueOf(index))) {
-                                                dest = (Suzuki_kasami_rmi) Naming.lookup(url);
-                                                dest.kill();
-                                        }
-                                }
-                                kill();
-                        }
                 }
+
+                if (leftCharacts > 0) {
+                        // solicitar el token para una nueva ronda
+                        try {
+                                Thread.sleep(cooling);
+                        } catch (InterruptedException e) {
+                                e.printStackTrace();
+                        }
+                        this.initializeExtractProcess(null);
+                } 
                 inCriticalSection = false;
         }
 

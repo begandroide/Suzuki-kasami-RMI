@@ -59,7 +59,7 @@ public class Token implements Serializable {
                         charactersRemaining += data.length();
                         contentFile += data;
                 }
-                System.out.println(contentFile);
+                // System.out.println(contentFile);
                 initialCharacters = charactersRemaining;
                 return charactersRemaining;
         }
