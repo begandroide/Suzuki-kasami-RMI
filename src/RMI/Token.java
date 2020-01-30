@@ -10,54 +10,56 @@ import java.util.Queue;
 
 public class Token implements Serializable {
 
-        /**
-         *
-         */
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 20120731125400L;
 
         private Queue<Integer> queue;
         private int[] ln;
-        private static int capacity;
-        private static Boolean isInstantiated = false;
-        private static BufferedReader reader;
-        private static int charactersRemaining;
-        private static  int initialCharacters;
+        private int capacity;
+        private Boolean isInstantiated = false;
+        private String  contentFile = "";
+        private int charactersRemaining;
+        private  int initialCharacters;
 
-        private Token(int numProcess) {
-                queue = new LinkedList<Integer>();
-                ln = new int[numProcess];
-                for (int i = 0; i < numProcess; i++) {
-                        ln[i] = 0;
-                }
-        }
+        // private Token(int numProcess) {
+        //         queue = new LinkedList<Integer>();
+        //         ln = new int[numProcess];
+        //         for (int i = 0; i < numProcess; i++) {
+        //                 ln[i] = 0;
+        //         }
+        // }
 
-        public static Token instantiate(int numProcesses, int inCapacity, String fileName) {
+        public Token(int numProcesses, int inCapacity, String fileName) {
                 if (!isInstantiated) {
+
                         isInstantiated = true;
                         capacity = inCapacity;
-                        try {
-                                reader = new BufferedReader(new FileReader(fileName));
+                        try (
+                                BufferedReader bReader = new BufferedReader(new FileReader(fileName));
+                        ) {
                                 // saber cantidad de recurso (letras) disponibles
-                                charactersRemaining = countInitialResources();
-                                reader.close();
-                                reader = new BufferedReader(new FileReader(fileName));
+                                charactersRemaining = countInitialResources(bReader);
+                                bReader.close();
                         } catch (FileNotFoundException e) {
                                 e.printStackTrace();
                         } catch (IOException e) {
                                 e.printStackTrace();
                         }
                         System.out.println("recurso inicial:" + charactersRemaining);
-                        return new Token(numProcesses);
+                        queue = new LinkedList<Integer>();
+                        ln = new int[numProcesses];
+                        for (int i = 0; i < numProcesses; i++) {
+                                ln[i] = 0;
+                        }       
                 }
-
-                return null;
         }
 
-        private static int countInitialResources() throws IOException {
-                String data;
+        private int countInitialResources(BufferedReader reader) throws IOException {
+                String data = "";
                 while ((data = reader.readLine()) != null) {
                         charactersRemaining += data.length();
+                        contentFile += data;
                 }
+                System.out.println(contentFile);
                 initialCharacters = charactersRemaining;
                 return charactersRemaining;
         }
@@ -124,7 +126,7 @@ public class Token implements Serializable {
          * 
          * @return capacidad
          */
-        public static int getCapacity() {
+        public int getCapacity() {
                 return capacity;
         }
 
@@ -137,16 +139,15 @@ public class Token implements Serializable {
                 return charactersRemaining;
         }
 
-        public String readCharacter() {
-                char[] readed = new char[1];
-                try {
-                        reader.read(readed, 0, 1);
-                } catch (IOException e) {
-                        e.printStackTrace();
-                }
+        public char readCharacter() {
+
+                char readed = contentFile.charAt(0);
+                
+                contentFile = contentFile.substring(1);
+
                 if(charactersRemaining > 0){
                         charactersRemaining -= 1;
                 }
-                return String.copyValueOf(readed);
+                return readed;
         }
 }

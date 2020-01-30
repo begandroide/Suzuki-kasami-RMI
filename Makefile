@@ -51,3 +51,6 @@ fullclean : clean
 
 runrmiregister:
 	cd $(J_DIRECTORY_CLASS_PATH); exec rmiregistry &
+
+shutdownrmiregister:
+	cd $(J_DIRECTORY_CLASS_PATH); exec rmiregistry &
