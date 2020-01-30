@@ -20,14 +20,6 @@ public class Token implements Serializable {
         private int charactersRemaining;
         private  int initialCharacters;
 
-        // private Token(int numProcess) {
-        //         queue = new LinkedList<Integer>();
-        //         ln = new int[numProcess];
-        //         for (int i = 0; i < numProcess; i++) {
-        //                 ln[i] = 0;
-        //         }
-        // }
-
         public Token(int numProcesses, int inCapacity, String fileName) {
                 if (!isInstantiated) {
 
@@ -59,7 +51,6 @@ public class Token implements Serializable {
                         charactersRemaining += data.length();
                         contentFile += data;
                 }
-                // System.out.println(contentFile);
                 initialCharacters = charactersRemaining;
                 return charactersRemaining;
         }

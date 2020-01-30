@@ -2,7 +2,6 @@
 import java.net.MalformedURLException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -57,11 +56,7 @@ public class Main {
                         e.printStackTrace();
                 }
                 int indexProcess = 0;
-                // System.out.println("endpoints");
-                // for (String string : endPoints) {
-                //         System.out.println(string);
-                // }
-                // System.out.println("fin endpoints");
+
                 if (endPoints.length > 0) {
                         String endString = endPoints[endPoints.length - 1];
                         Pattern pattern = Pattern.compile(URL_REGEX);
@@ -81,9 +76,12 @@ public class Main {
                 try {
                         process = new Suzuki_kasami(urls, indexProcess, capacity, velocity);
                         Naming.bind(urls[indexProcess], process);
-                        Naming.rebind(urls[indexProcess], process);
                 } catch (RemoteException | MalformedURLException | AlreadyBoundException e) {
-                        e.printStackTrace();
+                        try {
+                                Naming.rebind(urls[indexProcess], process);
+                        } catch (RemoteException | MalformedURLException e1) {
+                                e1.printStackTrace();
+                        }
                 }
 
                 Token token = null;

@@ -4,7 +4,6 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
@@ -104,7 +103,6 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                                 e.printStackTrace();
                         }
                 }
-                // System.out.println("quedan: " + token.getCharactersRemaining());
                 if (saca > 0) {
                         System.out.println();
                 }
@@ -119,25 +117,37 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 if (!inCriticalSection && token != null) {
                         if (index != id && (RN.get(id) > token.getLni(id))) {
                                 String url = "rmi://localhost/process" + id;
-                                try {
-                                        System.out.println("regalando token");
-                                        Suzuki_kasami_rmi dest = (Suzuki_kasami_rmi) Naming.lookup(url);
-                                        int leftCharacts = token.getCharactersRemaining();
-                                        dest.takeToken(token);
-                                        token = null;
-                                        if (leftCharacts > 0) {
-                                                // solicitar el token para una nueva ronda
-                                                try {
-                                                        Thread.sleep(cooling);
-                                                } catch (InterruptedException e) {
-                                                        e.printStackTrace();
-                                                }
-                                                this.initializeExtractProcess(null);
-                                        }
-                                } catch (MalformedURLException | NotBoundException e) {
-                                        // TODO Auto-generated catch block
-                                        e.printStackTrace();
-                                }
+                                int leftCharacts = token.getCharactersRemaining();
+                                giveToken(url);
+                                reinitialize(leftCharacts);
+                        }
+                }
+        }
+
+        private void giveToken(String url){
+                System.out.println("regalando token");
+                Suzuki_kasami_rmi dest;
+                try {
+                        dest = (Suzuki_kasami_rmi) Naming.lookup(url);
+                        dest.takeToken(token);
+                } catch (MalformedURLException | RemoteException | NotBoundException e) {
+                        e.printStackTrace();
+                }
+                token = null;
+
+                processState.status = Status.IDLE;
+                printStatus();
+        }
+
+        private void reinitialize(int leftCharacts){
+
+                if (leftCharacts > 0) {
+                        // solicitar el token para una nueva ronda
+                        try {
+                                Thread.sleep(cooling);
+                                this.initializeExtractProcess(null);
+                        } catch (InterruptedException | RemoteException e) {
+                                e.printStackTrace();
                         }
                 }
         }
@@ -211,29 +221,17 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                         }
                 }
                 // si la cola no esta vacia
-                String url = "";
                 Suzuki_kasami_rmi dest = null;
                 int leftCharacts = token.getCharactersRemaining();
                 if (!token.queueIsEmpty() && leftCharacts > 0) {
                         int idProcess = token.popId();
                         System.out.println("token se va a :" + idProcess);
-                        url = "rmi://localhost/process" + idProcess;
-                        dest = (Suzuki_kasami_rmi) Naming.lookup(url);
-                        dest.takeToken(token);
-                        token = null;
-
-                        processState.status = Status.IDLE;
-                        printStatus();
-                        // solicitar el token para una nueva ronda
-                        try {
-                                Thread.sleep(cooling);
-                        } catch (InterruptedException e) {
-                                e.printStackTrace();
-                        }
-                        this.initializeExtractProcess(null);
+                        
+                        giveToken("rmi://localhost/process" + idProcess);
+                        reinitialize(leftCharacts);
                         inCriticalSection = false;
                 } else{
-                        System.out.println("Proceso index " + index + "matando a otros");
+                        System.out.println("Proceso index " + index + " bajando a los otros");
                         for (String uri : urls) {
                                 if(!uri.contains(String.valueOf(index))){
                                         dest = (Suzuki_kasami_rmi) Naming.lookup(uri);
