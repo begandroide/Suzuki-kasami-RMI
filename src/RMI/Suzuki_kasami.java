@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +52,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
          * Estado del proceso
          */
         private ProcessState processState;
+        private Boolean killed = false;
 
         /**
          * Default constructor following RMI conventions
@@ -143,7 +145,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
         public void waitToken() throws RemoteException {
                 processState.status = Status.WAITINGTOKEN;
                 printStatus();
-                while (token == null) {
+                while (token == null && killed == false) {
                         try {
                                 Thread.sleep(TOKEN_WAIT_DELAY);
                         } catch (InterruptedException e) {
@@ -154,6 +156,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
 
         public void takeToken(Token token) throws RemoteException {
                 System.out.println("token tomado proceso " + index);
+                // if(token.getCharactersRemaining() == 0) return;
                 // System.out.println("token viene con " + token.getCharactersRemaining());
                 inCriticalSection = true;
                 this.token = (Token) token;
@@ -163,29 +166,20 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
 
         public void kill() throws RemoteException {
                 System.out.println("killing ME");
-                try {
-                        Naming.unbind(urls[index]);
-                } catch (MalformedURLException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                } catch (NotBoundException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                }
-                // System.exit(0);
+                killed = true;
         }
 
         public void initializeExtractProcess(Token token) throws RemoteException {
                 printRN();
                 // broadcast request
                 RN.set(index, RN.get(index) + 1);
+                
                 for (String url : urls) {
                         Suzuki_kasami_rmi dest;
                         try {
                                 dest = (Suzuki_kasami_rmi) Naming.lookup(url);
                                 dest.request(index, RN.get(index));
                         } catch (MalformedURLException |NotBoundException | RemoteException e) {
-                                throw new RuntimeException(e);
                         }
                 }
                 if(token != null) {
@@ -196,11 +190,13 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 } else{
                         waitToken();
                 }
-                extract();
-                try {
-                        leaveToken();
-                } catch (MalformedURLException | NotBoundException e) {
-                        e.printStackTrace();
+                if( killed == false){
+                        extract();
+                        try {
+                                leaveToken();
+                        } catch (MalformedURLException | NotBoundException e) {
+                                e.printStackTrace();
+                        }
                 }
 
         }
@@ -218,7 +214,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 String url = "";
                 Suzuki_kasami_rmi dest = null;
                 int leftCharacts = token.getCharactersRemaining();
-                if (!token.queueIsEmpty()) {
+                if (!token.queueIsEmpty() && leftCharacts > 0) {
                         int idProcess = token.popId();
                         System.out.println("token se va a :" + idProcess);
                         url = "rmi://localhost/process" + idProcess;
@@ -228,9 +224,6 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
 
                         processState.status = Status.IDLE;
                         printStatus();
-                }
-
-                if (leftCharacts > 0) {
                         // solicitar el token para una nueva ronda
                         try {
                                 Thread.sleep(cooling);
@@ -238,8 +231,18 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                                 e.printStackTrace();
                         }
                         this.initializeExtractProcess(null);
-                } 
-                inCriticalSection = false;
+                        inCriticalSection = false;
+                } else{
+                        System.out.println("Proceso index " + index + "matando a otros");
+                        for (String uri : urls) {
+                                if(!uri.contains(String.valueOf(index))){
+                                        dest = (Suzuki_kasami_rmi) Naming.lookup(uri);
+                                        dest.kill();
+                                }
+                        }
+                        kill();
+                }
+
         }
 
         private void printRN(){
