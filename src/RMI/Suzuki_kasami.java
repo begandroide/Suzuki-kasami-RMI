@@ -67,7 +67,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 this.urls = urls;
                 this.numProcesses = urls.length;
                 this.capacity = capacity;
-                this.cooling = (long)(capacity/2.)*1000;
+                this.cooling = (long)((double)capacity/(2.0*velocity))*1000;
                 this.velocity = (long) ((1. / velocity) * 1000);
                 System.out.println("Velocidad: " + this.velocity + " -- Enfriamiento: " + this.cooling);
                 reset();
