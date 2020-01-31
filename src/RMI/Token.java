@@ -20,6 +20,13 @@ public class Token implements Serializable {
         private int charactersRemaining;
         private  int initialCharacters;
 
+        public static final String ANSI_RESET = "\u001B[0m";
+        public static final String ANSI_RED = "\u001B[31m";
+        public static final String ANSI_GREEN = "\u001B[32m";
+        public static final String ANSI_YELLOW = "\u001B[33m";
+        public static final String ANSI_BLUE = "\u001B[34m";
+        public static final String ANSI_BOLD = "\u001B[1m";
+
         public Token(int numProcesses, int inCapacity, String fileName) {
                 if (!isInstantiated) {
 
@@ -130,9 +137,25 @@ public class Token implements Serializable {
                 return charactersRemaining;
         }
 
-        public char readCharacter() {
+        private String getColor(){
+                
+                double percent = 100*((double)charactersRemaining/initialCharacters);
+                if(100.0>=percent && percent>=75.0 ){
+                        return ANSI_BLUE;
+                } 
+                if(75.0>=percent && percent>=50.0 ){
+                        return ANSI_GREEN;
+                }
+                if(50.0>=percent && percent>=25.0 ){
+                        return ANSI_YELLOW;
+                }
+                
+                return ANSI_RED;
+        }
 
-                char readed = contentFile.charAt(0);
+        public String readCharacter() {
+
+                String readed = getColor() + ANSI_BOLD + String.valueOf( contentFile.charAt(0) ) + ANSI_RESET ;
                 
                 contentFile = contentFile.substring(1);
 
