@@ -40,7 +40,7 @@ public class Main {
                 try {
                         LocateRegistry.createRegistry(1099);
                 } catch (RemoteException e2) {
-                        System.out.println("registro ya estaba creado");
+                        System.out.println("registro rmi ya estaba creado, skip");
                 }
 
                 try {
@@ -64,7 +64,6 @@ public class Main {
                         Matcher matcher = pattern.matcher(endString);
                         if (matcher.matches()) {
                                 indexProcess = Integer.valueOf(matcher.group(1)) + 1;
-                                System.out.println("indice actual proceso " + indexProcess);
                         } else {
                                 System.out.println("ha ocurrido un problema al ligar el url rmi");
                                 System.exit(1);
@@ -86,12 +85,11 @@ public class Main {
 
                 Token token = null;
                 if (bearer) {
-                        System.out.println("INSTANCIACION TOKEN");
+                        System.out.println("Instanciando Token");
                         token = new Token(numProcesses, capacity, "../testfile");
                 }
 
                 try {
-                        System.out.println("thread wait " + delay);
                         Thread.sleep(delay);
                 } catch (InterruptedException e1) {
                         e1.printStackTrace();

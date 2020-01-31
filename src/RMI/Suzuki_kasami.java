@@ -69,14 +69,13 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 this.capacity = capacity;
                 this.cooling = (long)(capacity/2.)*1000;
                 this.velocity = (long) ((1. / velocity) * 1000);
-                System.out.println("VELOCIDAD: " + this.velocity);
-                System.out.println("COOLING: " + this.cooling);
+                System.out.println("Velocidad: " + this.velocity + " -- Enfriamiento: " + this.cooling);
                 reset();
                 printStatus();
         }
 
         private void printStatus() {
-                System.out.println("Proceso " + index + " en estado " + processState.toString());
+                System.out.println("\u001B[1mEstado: " + processState.toString() + "\u001B[0m");
         }
 
         public void reset() {
@@ -125,7 +124,6 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
         }
 
         private void giveToken(String url){
-                System.out.println("regalando token");
                 Suzuki_kasami_rmi dest;
                 try {
                         dest = (Suzuki_kasami_rmi) Naming.lookup(url);
@@ -165,9 +163,6 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
         }
 
         public void takeToken(Token token) throws RemoteException {
-                System.out.println("token tomado proceso " + index);
-                // if(token.getCharactersRemaining() == 0) return;
-                // System.out.println("token viene con " + token.getCharactersRemaining());
                 inCriticalSection = true;
                 this.token = (Token) token;
                 processState.status = Status.CRITICALSECTION;
@@ -175,7 +170,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
         }
 
         public void kill() throws RemoteException {
-                System.out.println("killing ME");
+                System.out.println("Matando proceso");
                 killed = true;
         }
 
@@ -200,7 +195,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 } else{
                         waitToken();
                 }
-                if( killed == false){
+                if( killed == false ){
                         extract();
                         try {
                                 leaveToken();
@@ -224,13 +219,13 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 Suzuki_kasami_rmi dest = null;
                 int leftCharacts = token.getCharactersRemaining();
                 if (!token.queueIsEmpty() && leftCharacts > 0) {
+                        // entregamos token
                         int idProcess = token.popId();
-                        System.out.println("token se va a :" + idProcess);
-                        
                         giveToken("rmi://localhost/process" + idProcess);
                         reinitialize(leftCharacts);
                         inCriticalSection = false;
                 } else{
+                        //no quedan recursos, matamos a los procesos
                         System.out.println("Proceso index " + index + " bajando a los otros");
                         for (String uri : urls) {
                                 if(!uri.contains(String.valueOf(index))){
@@ -243,11 +238,14 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
 
         }
 
+        /**
+         * Imprime el arreglo RN
+         */
         private void printRN(){
-                System.out.print("RN => [");
+                System.out.print("\u001B[1mRN => [");
                 for (Integer integer : RN) {
                         System.out.print(integer + ",");
                 }
-                System.out.print("]\n");
+                System.out.print("]\u001B[0m\n");
         }
 }
