@@ -129,19 +129,6 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                                 }
                                 index++;
                         }
-                        System.out.println(readed);
-                        // for (int i = 0; i < saca; i++) {
-                        //         if ((line = bReader.readLine()) != null) {
-                        //                 int sacaTmp = 
-                        //                 if (line.length() < saca) {
-                        //                         length = line.length();
-                        //                 }
-                        //                 string += line.substring(0, length);
-                        //         }
-                        // }
-                        // if ((line = bReader.readLine()) != null) {
-                        //         readed = line.substring(0, saca).toCharArray();
-                        // }
                         bReader.close();
                 } catch (IOException e) {
                         e.printStackTrace();
@@ -150,10 +137,30 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 try(
                         BufferedWriter bWriter = new BufferedWriter(new FileWriter(token.getFileName()));
                 ){
-                        // lines.remove(0);
                         // lines.set(0, line.substring(saca,line.length()));
-                        for (String string : lines) {
-                                bWriter.write(string + "\n");
+                        int removed = 0;
+                        int sacaTmp = saca;
+
+                        for (int i = 0; i < lines.size(); i++) {
+                                String line = lines.get(i);
+                                if(removed < sacaTmp && line.length() < sacaTmp){
+                                        removed += line.length();
+                                        sacaTmp -= line.length();
+                                } else{
+                                        if(removed < saca){
+                                                lines.set(i, line.substring(sacaTmp, line.length()));
+                                                removed += sacaTmp;
+                                        }
+
+                                        if(lines.get(i).length() > 0) {
+                                                bWriter.write(lines.get(i));
+                                        
+                                                if(i != lines.size() - 1){
+                                                        bWriter.write("\n");
+                                                }
+                                        }
+                                }
+
                         }
                         bWriter.close();
                 } catch(IOException e){
