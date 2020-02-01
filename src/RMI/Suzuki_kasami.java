@@ -78,7 +78,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 this.urls = urls;
                 this.numProcesses = urls.length;
                 this.capacity = capacity;
-                this.cooling = (long) ((double) capacity / (2.0 * velocity)) * 1000;
+                this.cooling = (long) ((double) (capacity * 1000) / (2.0 * velocity));
                 this.velocity = (long) ((1. / velocity) * 1000);
                 System.out.println("Velocidad: " + this.velocity + " -- Enfriamiento: " + this.cooling);
                 reset();
@@ -106,16 +106,30 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 int saca = Math.min(token.getCharactersRemaining(), capacity);
                 System.out.println("Extracción:");
 
+                String readed = readWrite(saca);
+               
+                for (int i = 0; i < saca; i++) {
+                        System.out.print(token.readCharacter());
+                        System.out.print(readed.charAt(i) + "\u001B[0m" );
+                        try {
+                                Thread.sleep(velocity);
+                        } catch (InterruptedException e) {
+                                e.printStackTrace();
+                        }
+                }
+                if (saca > 0) {
+                        System.out.println();
+                }
+        }
+
+        private String readWrite(int saca){
                 String readed = "";
                 List<String> lines = null;
                 try (
                         BufferedReader bReader = new BufferedReader(new FileReader(token.getFileName()));
                 ) {
-                        // sacar primera linea
                         Path path = FileSystems.getDefault().getPath("", token.getFileName());
-                        System.out.println(path);
                         lines = Files.readAllLines(path , StandardCharsets.UTF_8);
-                        System.out.println(lines.size());
 
                         int index = 0;
                         int sacaTmp = saca;
@@ -147,25 +161,13 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                                                 bWriter.write("\n");
                                         }
                                 }
-
                         }
                         bWriter.close();
                 } catch(IOException e){
                         e.printStackTrace();
                 }
 
-                for (int i = 0; i < saca; i++) {
-                        System.out.print(token.readCharacter());
-                        System.out.print(readed.charAt(i) + "\u001B[0m" );
-                        try {
-                                Thread.sleep(velocity);
-                        } catch (InterruptedException e) {
-                                e.printStackTrace();
-                        }
-                }
-                if (saca > 0) {
-                        System.out.println();
-                }
+                return readed;
         }
 
         public void request(int id, int seq) throws RemoteException {

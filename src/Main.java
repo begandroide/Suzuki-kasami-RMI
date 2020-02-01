@@ -32,6 +32,7 @@ public class Main {
                 int delay = Integer.parseInt(args[3]);
                 boolean bearer = (args[4].compareTo("True") == 0 ? true : false);
                 String[] urls = new String[numProcesses];
+                boolean creatorRegistry = true;
 
                 for (int i = 0; i < urls.length; i++) {
                         urls[i] = String.format(URL_PREFIX, i);
@@ -40,6 +41,7 @@ public class Main {
                 try {
                         LocateRegistry.createRegistry(1099);
                 } catch (RemoteException e2) {
+                        creatorRegistry = false;
                         System.out.println("registro rmi ya estaba creado, skip");
                 }
 
@@ -100,7 +102,14 @@ public class Main {
                 } catch (RemoteException e) {
                         e.printStackTrace();
                 }
-
+                if(creatorRegistry){
+                        System.out.println("Esperando término de otros procesos para bajar registro rmi");
+                        try {
+                                Thread.sleep(1500);
+                        } catch (InterruptedException e) {
+                                e.printStackTrace();
+                        }
+                }
                 System.out.println("Proceso de extracción terminado");
                 System.exit(0);
 
