@@ -124,10 +124,12 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                                 if(line.length() < sacaTmp){
                                         readed += line;
                                         sacaTmp -= line.length();
+                                        lines.remove(index);
                                 } else{
                                         readed += line.substring(0, sacaTmp);
+                                        lines.set(index,line.substring(sacaTmp,line.length()));
+                                        index++;
                                 }
-                                index++;
                         }
                         bReader.close();
                 } catch (IOException e) {
@@ -137,33 +139,19 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 try(
                         BufferedWriter bWriter = new BufferedWriter(new FileWriter(token.getFileName()));
                 ){
-                        // lines.set(0, line.substring(saca,line.length()));
-                        int removed = 0;
-                        int sacaTmp = saca;
-
+                        //escribimos en archivo
                         for (int i = 0; i < lines.size(); i++) {
-                                String line = lines.get(i);
-                                if(removed < sacaTmp && line.length() < sacaTmp){
-                                        removed += line.length();
-                                        sacaTmp -= line.length();
-                                } else{
-                                        if(removed < saca){
-                                                lines.set(i, line.substring(sacaTmp, line.length()));
-                                                removed += sacaTmp;
-                                        }
-
-                                        if(lines.get(i).length() > 0) {
-                                                bWriter.write(lines.get(i));
-                                        
-                                                if(i != lines.size() - 1){
-                                                        bWriter.write("\n");
-                                                }
+                                if(lines.get(i).length() > 0) {
+                                        bWriter.write(lines.get(i));
+                                        if(i != lines.size() - 1){
+                                                bWriter.write("\n");
                                         }
                                 }
 
                         }
                         bWriter.close();
                 } catch(IOException e){
+                        e.printStackTrace();
                 }
 
                 for (int i = 0; i < saca; i++) {
