@@ -106,8 +106,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 int saca = Math.min(token.getCharactersRemaining(), capacity);
                 System.out.println("Extracción:");
 
-                String line = "";
-                char[] readed = new char[saca];
+                String readed = "";
                 List<String> lines = null;
                 try (
                         BufferedReader bReader = new BufferedReader(new FileReader(token.getFileName()));
@@ -117,9 +116,32 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                         System.out.println(path);
                         lines = Files.readAllLines(path , StandardCharsets.UTF_8);
                         System.out.println(lines.size());
-                        if ((line = bReader.readLine()) != null) {
-                                readed = line.substring(0, saca).toCharArray();
+
+                        int index = 0;
+                        int sacaTmp = saca;
+                        while(readed.length() < saca){
+                                String line = lines.get(index);
+                                if(line.length() < sacaTmp){
+                                        readed += line;
+                                        sacaTmp -= line.length();
+                                } else{
+                                        readed += line.substring(0, sacaTmp);
+                                }
+                                index++;
                         }
+                        System.out.println(readed);
+                        // for (int i = 0; i < saca; i++) {
+                        //         if ((line = bReader.readLine()) != null) {
+                        //                 int sacaTmp = 
+                        //                 if (line.length() < saca) {
+                        //                         length = line.length();
+                        //                 }
+                        //                 string += line.substring(0, length);
+                        //         }
+                        // }
+                        // if ((line = bReader.readLine()) != null) {
+                        //         readed = line.substring(0, saca).toCharArray();
+                        // }
                         bReader.close();
                 } catch (IOException e) {
                         e.printStackTrace();
@@ -129,7 +151,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                         BufferedWriter bWriter = new BufferedWriter(new FileWriter(token.getFileName()));
                 ){
                         // lines.remove(0);
-                        lines.set(0, line.substring(saca,line.length()));
+                        // lines.set(0, line.substring(saca,line.length()));
                         for (String string : lines) {
                                 bWriter.write(string + "\n");
                         }
@@ -139,7 +161,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
 
                 for (int i = 0; i < saca; i++) {
                         System.out.print(token.readCharacter());
-                        System.out.print(readed[i] + "\u001B[0m" );
+                        System.out.print(readed.charAt(i) + "\u001B[0m" );
                         try {
                                 Thread.sleep(velocity);
                         } catch (InterruptedException e) {
