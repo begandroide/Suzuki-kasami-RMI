@@ -16,7 +16,8 @@ public class Token implements Serializable {
         private int[] ln;
         private int capacity;
         private Boolean isInstantiated = false;
-        private String  contentFile = "";
+        // private String  contentFile = "";
+        private String fileName = "";
         private int charactersRemaining;
         private  int initialCharacters;
 
@@ -32,6 +33,7 @@ public class Token implements Serializable {
 
                         isInstantiated = true;
                         capacity = inCapacity;
+                        this.fileName = fileName;
                         try (
                                 BufferedReader bReader = new BufferedReader(new FileReader(fileName));
                         ) {
@@ -56,7 +58,7 @@ public class Token implements Serializable {
                 String data = "";
                 while ((data = reader.readLine()) != null) {
                         charactersRemaining += data.length();
-                        contentFile += data;
+                        // contentFile += data;
                 }
                 initialCharacters = charactersRemaining;
                 return charactersRemaining;
@@ -137,6 +139,15 @@ public class Token implements Serializable {
                 return charactersRemaining;
         }
 
+        /**
+         * Obtener el nombre del archivo
+         * 
+         * @return nombre del archivo
+         */
+        public String getFileName() {
+                return fileName;
+        }
+
         private String getColor(){
                 
                 double percent = 100*((double)charactersRemaining/initialCharacters);
@@ -155,9 +166,9 @@ public class Token implements Serializable {
 
         public String readCharacter() {
 
-                String readed = getColor() + ANSI_BOLD + String.valueOf( contentFile.charAt(0) ) + ANSI_RESET ;
+                String readed = getColor() + ANSI_BOLD ;//+ String.valueOf( contentFile.charAt(0) ) + ANSI_RESET ;
                 
-                contentFile = contentFile.substring(1);
+                // contentFile = contentFile.substring(1);
 
                 if(charactersRemaining > 0){
                         charactersRemaining -= 1;

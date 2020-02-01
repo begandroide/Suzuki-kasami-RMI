@@ -1,6 +1,17 @@
 package RMI;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -67,7 +78,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 this.urls = urls;
                 this.numProcesses = urls.length;
                 this.capacity = capacity;
-                this.cooling = (long)((double)capacity/(2.0*velocity))*1000;
+                this.cooling = (long) ((double) capacity / (2.0 * velocity)) * 1000;
                 this.velocity = (long) ((1. / velocity) * 1000);
                 System.out.println("Velocidad: " + this.velocity + " -- Enfriamiento: " + this.cooling);
                 reset();
@@ -94,8 +105,41 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 // de seguro tenemos token
                 int saca = Math.min(token.getCharactersRemaining(), capacity);
                 System.out.println("Extracción:");
+
+                String line = "";
+                char[] readed = new char[saca];
+                List<String> lines = null;
+                try (
+                        BufferedReader bReader = new BufferedReader(new FileReader(token.getFileName()));
+                ) {
+                        // sacar primera linea
+                        Path path = FileSystems.getDefault().getPath("", token.getFileName());
+                        System.out.println(path);
+                        lines = Files.readAllLines(path , StandardCharsets.UTF_8);
+                        System.out.println(lines.size());
+                        if ((line = bReader.readLine()) != null) {
+                                readed = line.substring(0, saca).toCharArray();
+                        }
+                        bReader.close();
+                } catch (IOException e) {
+                        e.printStackTrace();
+                }
+
+                try(
+                        BufferedWriter bWriter = new BufferedWriter(new FileWriter(token.getFileName()));
+                ){
+                        // lines.remove(0);
+                        lines.set(0, line.substring(saca,line.length()));
+                        for (String string : lines) {
+                                bWriter.write(string + "\n");
+                        }
+                        bWriter.close();
+                } catch(IOException e){
+                }
+
                 for (int i = 0; i < saca; i++) {
                         System.out.print(token.readCharacter());
+                        System.out.print(readed[i] + "\u001B[0m" );
                         try {
                                 Thread.sleep(velocity);
                         } catch (InterruptedException e) {

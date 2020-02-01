@@ -86,7 +86,7 @@ public class Main {
                 Token token = null;
                 if (bearer) {
                         System.out.println("Instanciando Token");
-                        token = new Token(numProcesses, capacity, "../testfile");
+                        token = new Token(numProcesses, capacity, "./testfile");
                 }
 
                 try {
