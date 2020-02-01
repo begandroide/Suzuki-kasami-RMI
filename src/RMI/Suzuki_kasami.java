@@ -78,7 +78,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 this.urls = urls;
                 this.numProcesses = urls.length;
                 this.capacity = capacity;
-                this.cooling = (long) ((double) capacity / (2.0 * velocity)) * 1000;
+                this.cooling = (long) ((double) (capacity * 1000) / (2.0 * velocity));
                 this.velocity = (long) ((1. / velocity) * 1000);
                 System.out.println("Velocidad: " + this.velocity + " -- Enfriamiento: " + this.cooling);
                 reset();
@@ -106,40 +106,11 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 int saca = Math.min(token.getCharactersRemaining(), capacity);
                 System.out.println("Extracción:");
 
-                String line = "";
-                char[] readed = new char[saca];
-                List<String> lines = null;
-                try (
-                        BufferedReader bReader = new BufferedReader(new FileReader(token.getFileName()));
-                ) {
-                        // sacar primera linea
-                        Path path = FileSystems.getDefault().getPath("", token.getFileName());
-                        System.out.println(path);
-                        lines = Files.readAllLines(path , StandardCharsets.UTF_8);
-                        System.out.println(lines.size());
-                        if ((line = bReader.readLine()) != null) {
-                                readed = line.substring(0, saca).toCharArray();
-                        }
-                        bReader.close();
-                } catch (IOException e) {
-                        e.printStackTrace();
-                }
-
-                try(
-                        BufferedWriter bWriter = new BufferedWriter(new FileWriter(token.getFileName()));
-                ){
-                        // lines.remove(0);
-                        lines.set(0, line.substring(saca,line.length()));
-                        for (String string : lines) {
-                                bWriter.write(string + "\n");
-                        }
-                        bWriter.close();
-                } catch(IOException e){
-                }
-
+                String readed = readWrite(saca);
+               
                 for (int i = 0; i < saca; i++) {
                         System.out.print(token.readCharacter());
-                        System.out.print(readed[i] + "\u001B[0m" );
+                        System.out.print(readed.charAt(i) + "\u001B[0m" );
                         try {
                                 Thread.sleep(velocity);
                         } catch (InterruptedException e) {
@@ -149,6 +120,54 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 if (saca > 0) {
                         System.out.println();
                 }
+        }
+
+        private String readWrite(int saca){
+                String readed = "";
+                List<String> lines = null;
+                try (
+                        BufferedReader bReader = new BufferedReader(new FileReader(token.getFileName()));
+                ) {
+                        Path path = FileSystems.getDefault().getPath("", token.getFileName());
+                        lines = Files.readAllLines(path , StandardCharsets.UTF_8);
+
+                        int index = 0;
+                        int sacaTmp = saca;
+                        while(readed.length() < saca){
+                                String line = lines.get(index);
+                                if(line.length() < sacaTmp){
+                                        readed += line;
+                                        sacaTmp -= line.length();
+                                        lines.remove(index);
+                                } else{
+                                        readed += line.substring(0, sacaTmp);
+                                        lines.set(index,line.substring(sacaTmp,line.length()));
+                                        index++;
+                                }
+                        }
+                        bReader.close();
+                } catch (IOException e) {
+                        e.printStackTrace();
+                }
+
+                try(
+                        BufferedWriter bWriter = new BufferedWriter(new FileWriter(token.getFileName()));
+                ){
+                        //escribimos en archivo
+                        for (int i = 0; i < lines.size(); i++) {
+                                if(lines.get(i).length() > 0) {
+                                        bWriter.write(lines.get(i));
+                                        if(i != lines.size() - 1){
+                                                bWriter.write("\n");
+                                        }
+                                }
+                        }
+                        bWriter.close();
+                } catch(IOException e){
+                        e.printStackTrace();
+                }
+
+                return readed;
         }
 
         public void request(int id, int seq) throws RemoteException {
