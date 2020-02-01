@@ -10,7 +10,7 @@ public interface Suzuki_kasami_rmi extends Remote {
          * 
          * @throws RemoteException
          */
-        public void initializeExtractProcess() throws RemoteException;
+        public void initializeExtractProcess(Token token) throws RemoteException;
 
         /**
          * registra una peticion (request) de un proceso (remoto)

@@ -48,6 +48,3 @@ fullclean : clean
 	rmdir ./bin
 	killall rmiregistry; 
 	echo "\nHecho"
-
-runrmiregister:
-	cd $(J_DIRECTORY_CLASS_PATH); exec rmiregistry &
