@@ -287,7 +287,10 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                         giveToken("rmi://localhost/process" + idProcess);
                         reinitialize(leftCharacts);
                         inCriticalSection = false;
-                } else{
+                } else if(token.queueIsEmpty() && leftCharacts > 0){
+                        reinitialize(leftCharacts);
+                        inCriticalSection = false;
+                } else {
                         //no quedan recursos, matamos a los procesos
                         System.out.println("Proceso index " + index + " bajando a los otros");
                         for (String uri : urls) {
