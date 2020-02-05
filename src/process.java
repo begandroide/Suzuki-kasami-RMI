@@ -12,7 +12,7 @@ import RMI.Suzuki_kasami;
 import RMI.Suzuki_kasami_rmi;
 import RMI.Token;
 
-public class Main {
+public class process {
 
         private static String URL_PREFIX = "rmi://localhost/process%d";
         private static String URL_REGEX = "^process([0-9]+)$";
