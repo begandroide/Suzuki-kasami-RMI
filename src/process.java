@@ -21,16 +21,17 @@ public class process {
 
         public static void main(String[] args) {
 
-                if (args.length < 5) {
-                        System.out.println("Uso: java Main <num_processes> <capacity> <velocity> <delay> <bearer>");
+                if (args.length < 6) {
+                        System.out.println("Uso: java process <num_processes> <file_name> <capacity> <velocity> <delay> <bearer>");
                         System.exit(1);
                 }
 
                 int numProcesses = Integer.parseInt(args[0]);
-                int capacity = Integer.parseInt(args[1]);
-                int velocity = Integer.parseInt(args[2]);
-                int delay = Integer.parseInt(args[3]);
-                boolean bearer = (args[4].compareTo("True") == 0 ? true : false);
+                String fileName = args[1];
+                int capacity = Integer.parseInt(args[2]);
+                int velocity = Integer.parseInt(args[3]);
+                int delay = Integer.parseInt(args[4]);
+                boolean bearer = ( (args[5].compareTo("True") == 0 || args[5].compareTo("true") == 0 ) ? true : false);
                 String[] urls = new String[numProcesses];
                 boolean creatorRegistry = true;
 
@@ -88,7 +89,7 @@ public class process {
                 Token token = null;
                 if (bearer) {
                         System.out.println("Instanciando Token");
-                        token = new Token(numProcesses, capacity, "../testfile");
+                        token = new Token(numProcesses, capacity, fileName);
                 }
 
                 try {
