@@ -46,5 +46,4 @@ clean :
 # Détruit également le dossier bin
 fullclean : clean
 	rmdir ./bin
-	killall rmiregistry; 
-	echo "\nHecho"
+	@echo "Full Clean Done!"
