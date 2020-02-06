@@ -186,10 +186,17 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
 
         // begin private implementation
 
+        /**
+         * Imprime por consola el estado actual del proceso
+         */
         private void printStatus() {
                 System.out.println("\u001B[1mEstado: " + processState.toString() + "\u001B[0m");
         }
 
+        /**
+         * Reinicializa el proceso, setea en valores iniciales de ejecución de un proceso
+         * en el algoritmo.
+         */
         private void reset() {
 
                 this.RN = new ArrayList<Integer>(numProcesses);
@@ -202,7 +209,12 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 inCriticalSection = false;
         }
 
-        private String readWrite(int saca){
+        /**
+         * Lee "cantidad" letras del archivo y las elimina del archivo de texto 
+         * @param cantidad cantidad de letras a eliminar del principio del archivo
+         * @return String con las letras extraidas y removidas del archivo
+         */
+        private String readWrite(int cantidad){
                 String readed = "";
                 List<String> lines = null;
                 try (
@@ -212,8 +224,8 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                         lines = Files.readAllLines(path , StandardCharsets.UTF_8);
 
                         int index = 0;
-                        int sacaTmp = saca;
-                        while(readed.length() < saca){
+                        int sacaTmp = cantidad;
+                        while(readed.length() < cantidad){
                                 String line = lines.get(index);
                                 if(line.length() < sacaTmp){
                                         readed += line;
@@ -250,20 +262,32 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 return readed;
         }
 
+        /**
+         * Entrega el token a un proceso remoto
+         * @param url url del proceso remoto
+         */
         private void giveToken(String url){
                 Suzuki_kasami_rmi dest;
                 try {
+                        //buscamos proceso por lookup
                         dest = (Suzuki_kasami_rmi) Naming.lookup(url);
+                        //entregamos el token a destino
                         dest.takeToken(token);
                 } catch (MalformedURLException | RemoteException | NotBoundException e) {
                         e.printStackTrace();
                 }
                 token = null;
-
+                //actualizamos estado de proceso
                 processState.status = Status.IDLE;
                 printStatus();
         }
 
+        /**
+         * Reinicializa la petición del token en el caso de que 
+         * queden mas de cero caracteres en el archivo
+         * @param leftCharacts cantidad de letras que el proceso actual sabe 
+         * que quedan en el token.
+         */
         private void reinitialize(int leftCharacts){
 
                 if (leftCharacts > 0) {
@@ -277,17 +301,25 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 }
         }
 
+        /**
+         * Comenzar a extraer letras del archivo, es requerido
+         * que el proceso esté dentro de la SC.
+         */
         private void extract(){
                 // de seguro tenemos token
+                // sacamos el minimo entre los caracteres restantes y la capacidad
                 int saca = Math.min(token.getCharactersRemaining(), capacity);
                 System.out.println("Extracción:");
 
+                // extraemos las letras y actualizamos archivo
                 String readed = readWrite(saca);
                
                 for (int i = 0; i < saca; i++) {
+                        //formato de color dado por token
                         System.out.print(token.readCharacter());
                         System.out.print(readed.charAt(i) + "\u001B[0m" );
                         try {
+                                //velocity like sleep
                                 Thread.sleep(velocity);
                         } catch (InterruptedException e) {
                                 e.printStackTrace();
@@ -298,7 +330,13 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 }
         }
 
+        /**
+         * Método que deja el token actual, además es el 
+         * encargado de enviar el token a otros procesos que 
+         * tienen peticiones pendientes.
+         */
         private void leaveToken()  {
+                //actualizamos LN en token
                 token.setLni(index, token.getLni(index) + 1);
                 for (int i = 0; i < numProcesses; i++) {
                         if (!token.queueContains(i)) {
@@ -317,6 +355,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                         reinitialize(leftCharacts);
                         inCriticalSection = false;
                 } else if(token.queueIsEmpty() && leftCharacts > 0){
+                        // si no hay más procesos esperando por token, solicito el token de nuevo
                         reinitialize(leftCharacts);
                         inCriticalSection = false;
                 } else {
@@ -333,6 +372,7 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                                 }
                         }
                         try {
+                                // se mata el proceso actual
                                 kill();
                         } catch (RemoteException e) {
                                 e.printStackTrace();
