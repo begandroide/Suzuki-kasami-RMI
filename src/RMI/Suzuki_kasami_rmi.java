@@ -8,6 +8,8 @@ public interface Suzuki_kasami_rmi extends Remote {
         /**
          * Petición de ingresar a extracción de letras
          * 
+         * @param token token, objeto único, puede ser pasado como argumento
+         * en el caso de que el proceso posea el token al inicio del algoritmo.
          * @throws RemoteException
          */
         public void initializeExtractProcess(Token token) throws RemoteException;
