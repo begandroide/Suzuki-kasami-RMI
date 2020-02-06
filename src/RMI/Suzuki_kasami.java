@@ -2,12 +2,10 @@ package RMI;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -24,44 +22,74 @@ import RMI.ProcessState.Status;
 public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_rmi {
 
         /**
-        *
+        * Necesario cuando implementamos la interfaz remota
         */
         private static final long serialVersionUID = 4466469363475602035L;
 
+
         /**
-         * A delay between checks of token acquisition.
+         * Delay para volver a chequear si tenemos el token.
+         * Problema de diseño: bussy waiting
          */
         private static final int TOKEN_WAIT_DELAY = 10;
 
-        // for every process the sequence number of the last request this process knows
-        // about.
-        private List<Integer> RN;
+        /**
+         * Arreglo que contiene el número de secuencia de los procesos, donde 
+         * RN[j] es el último número de secuencia recibido desde el proceso j. 
+         */
+        private List<Integer> RN = null;
 
         /**
-         * Index of a current process
+         * Indice del proceso actual
          */
-        private int index;
+        private int index = 0;
 
         /**
-         * Number of processes participating in message exchange
+         * Cantidad de procesos participando en el algoritmo
          */
-        private int numProcesses;
+        private int numProcesses = 0;
 
         /**
-         * URLs of processes in a system
+         * URLs de procesos en el algoritmo
          */
-        private String[] urls;
+        private String[] urls = null;
 
+        /**
+         * Objeto único en el sistema, el cual autoriza el paso a la 
+         * sección crítica. El proceso al obtenerlo, entra a la SC.
+         */
         private Token token = null;
+
+        /**
+         * Capacidad de extracción de un proceso. Quiere decir
+         * la cantidad de letras que se pueden extraer en la sección crítica.
+         */
         private int capacity = 0;
+
+        /**
+         * Velocidad de extracción de letras. (Cantidad de letras/seg) 
+         */
         private long velocity = 1;
-        private boolean inCriticalSection = false;
+        
+        /**
+         * (Enfriamiento) Tiempo que el proceso espera antes de volver a 
+         * pedir el token.
+         */
         private long cooling = 0;
+
+        /**
+         * Si el proceso está en SC.
+         */
+        private boolean inCriticalSection = false;
 
         /**
          * Estado del proceso
          */
-        private ProcessState processState;
+        private ProcessState processState = null;
+
+        /**
+         * Si el proceso fue bajado o matado.
+         */
         private Boolean killed = false;
 
         /**
@@ -85,11 +113,84 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 printStatus();
         }
 
+        // begin RMI implementation
+
+        public void request(int id, int seq) throws RemoteException {
+                // actualizamos numero de seq del proceso id
+                // el maximo entre el RN[id] y seq
+                RN.set(id, Math.max(RN.get(id), seq));
+
+                // si no estoy en seccion critica, tengo el token y la petición no es mia
+                if (!inCriticalSection && token != null) {
+                        if (index != id && (RN.get(id) > token.getLni(id))) {
+                                String url = "rmi://localhost/process" + id;
+                                int leftCharacts = token.getCharactersRemaining();
+                                giveToken(url);
+                                reinitialize(leftCharacts);
+                        }
+                }
+        }
+
+        public void waitToken() throws RemoteException {
+                processState.status = Status.WAITINGTOKEN;
+                printStatus();
+                while (token == null && killed == false) {
+                        try {
+                                Thread.sleep(TOKEN_WAIT_DELAY);
+                        } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                        }
+                }
+        }
+
+        public void takeToken(Token token) throws RemoteException {
+                inCriticalSection = true;
+                this.token = (Token) token;
+                processState.status = Status.CRITICALSECTION;
+                printStatus();
+        }
+
+        public void kill() throws RemoteException {
+                System.out.println("Matando proceso");
+                killed = true;
+        }
+
+        public void initializeExtractProcess(Token token) throws RemoteException {
+                printRN();
+                // broadcast request
+                RN.set(index, RN.get(index) + 1);
+                
+                for (String url : urls) {
+                        Suzuki_kasami_rmi dest;
+                        try {
+                                dest = (Suzuki_kasami_rmi) Naming.lookup(url);
+                                dest.request(index, RN.get(index));
+                        } catch (MalformedURLException |NotBoundException  e) {
+                        }
+                }
+                if(token != null) {
+                        inCriticalSection = true;
+                        this.token = (Token) token;
+                        processState.status = Status.CRITICALSECTION;
+                        printStatus();
+                } else{
+                        waitToken();
+                }
+                if( killed == false ){
+                        extract();
+                        leaveToken();
+                }
+        }
+
+        // end RMI implementation
+
+        // begin private implementation
+
         private void printStatus() {
                 System.out.println("\u001B[1mEstado: " + processState.toString() + "\u001B[0m");
         }
 
-        public void reset() {
+        private void reset() {
 
                 this.RN = new ArrayList<Integer>(numProcesses);
                 for (int i = 0; i < numProcesses; i++) {
@@ -99,27 +200,6 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
 
                 token = null;
                 inCriticalSection = false;
-        }
-
-        public void extract() throws RemoteException {
-                // de seguro tenemos token
-                int saca = Math.min(token.getCharactersRemaining(), capacity);
-                System.out.println("Extracción:");
-
-                String readed = readWrite(saca);
-               
-                for (int i = 0; i < saca; i++) {
-                        System.out.print(token.readCharacter());
-                        System.out.print(readed.charAt(i) + "\u001B[0m" );
-                        try {
-                                Thread.sleep(velocity);
-                        } catch (InterruptedException e) {
-                                e.printStackTrace();
-                        }
-                }
-                if (saca > 0) {
-                        System.out.println();
-                }
         }
 
         private String readWrite(int saca){
@@ -170,22 +250,6 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 return readed;
         }
 
-        public void request(int id, int seq) throws RemoteException {
-                // actualizamos numero de seq del proceso id
-                // el maximo entre el RN[id] y seq
-                RN.set(id, Math.max(RN.get(id), seq));
-
-                // si no estoy en seccion critica, tengo el token y la petición no es mia
-                if (!inCriticalSection && token != null) {
-                        if (index != id && (RN.get(id) > token.getLni(id))) {
-                                String url = "rmi://localhost/process" + id;
-                                int leftCharacts = token.getCharactersRemaining();
-                                giveToken(url);
-                                reinitialize(leftCharacts);
-                        }
-                }
-        }
-
         private void giveToken(String url){
                 Suzuki_kasami_rmi dest;
                 try {
@@ -213,63 +277,28 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 }
         }
 
-        public void waitToken() throws RemoteException {
-                processState.status = Status.WAITINGTOKEN;
-                printStatus();
-                while (token == null && killed == false) {
+        private void extract(){
+                // de seguro tenemos token
+                int saca = Math.min(token.getCharactersRemaining(), capacity);
+                System.out.println("Extracción:");
+
+                String readed = readWrite(saca);
+               
+                for (int i = 0; i < saca; i++) {
+                        System.out.print(token.readCharacter());
+                        System.out.print(readed.charAt(i) + "\u001B[0m" );
                         try {
-                                Thread.sleep(TOKEN_WAIT_DELAY);
+                                Thread.sleep(velocity);
                         } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
-                        }
-                }
-        }
-
-        public void takeToken(Token token) throws RemoteException {
-                inCriticalSection = true;
-                this.token = (Token) token;
-                processState.status = Status.CRITICALSECTION;
-                printStatus();
-        }
-
-        public void kill() throws RemoteException {
-                System.out.println("Matando proceso");
-                killed = true;
-        }
-
-        public void initializeExtractProcess(Token token) throws RemoteException {
-                printRN();
-                // broadcast request
-                RN.set(index, RN.get(index) + 1);
-                
-                for (String url : urls) {
-                        Suzuki_kasami_rmi dest;
-                        try {
-                                dest = (Suzuki_kasami_rmi) Naming.lookup(url);
-                                dest.request(index, RN.get(index));
-                        } catch (MalformedURLException |NotBoundException | RemoteException e) {
-                        }
-                }
-                if(token != null) {
-                        inCriticalSection = true;
-                        this.token = (Token) token;
-                        processState.status = Status.CRITICALSECTION;
-                        printStatus();
-                } else{
-                        waitToken();
-                }
-                if( killed == false ){
-                        extract();
-                        try {
-                                leaveToken();
-                        } catch (MalformedURLException | NotBoundException e) {
                                 e.printStackTrace();
                         }
                 }
-
+                if (saca > 0) {
+                        System.out.println();
+                }
         }
 
-        public void leaveToken() throws MalformedURLException, NotBoundException, RemoteException {
+        private void leaveToken()  {
                 token.setLni(index, token.getLni(index) + 1);
                 for (int i = 0; i < numProcesses; i++) {
                         if (!token.queueContains(i)) {
@@ -295,11 +324,19 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                         System.out.println("Proceso index " + index + " bajando a los otros");
                         for (String uri : urls) {
                                 if(!uri.contains(String.valueOf(index))){
-                                        dest = (Suzuki_kasami_rmi) Naming.lookup(uri);
-                                        dest.kill();
+                                        try {
+                                                dest = (Suzuki_kasami_rmi) Naming.lookup(uri);
+                                                dest.kill();
+                                        } catch (MalformedURLException | RemoteException | NotBoundException e) {
+                                                e.printStackTrace();
+                                        }
                                 }
                         }
-                        kill();
+                        try {
+                                kill();
+                        } catch (RemoteException e) {
+                                e.printStackTrace();
+                        }
                 }
 
         }
@@ -314,4 +351,6 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                 }
                 System.out.print("]\u001B[0m\n");
         }
+
+        // end private implementation
 }
