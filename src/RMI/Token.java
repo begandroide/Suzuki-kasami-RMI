@@ -54,11 +54,16 @@ public class Token implements Serializable {
                 }
         }
 
+        /**
+         * Contar recurso inicial
+         * @param reader
+         * @return
+         * @throws IOException
+         */
         private int countInitialResources(BufferedReader reader) throws IOException {
                 String data = "";
                 while ((data = reader.readLine()) != null) {
                         charactersRemaining += data.length();
-                        // contentFile += data;
                 }
                 initialCharacters = charactersRemaining;
                 return charactersRemaining;
@@ -148,6 +153,11 @@ public class Token implements Serializable {
                 return fileName;
         }
 
+        /**
+         * Obtener color que debe escribirse en consola,
+         * según cantidad de recurso disponible
+         * @return
+         */
         private String getColor(){
                 
                 double percent = 100*((double)charactersRemaining/initialCharacters);
@@ -164,12 +174,14 @@ public class Token implements Serializable {
                 return ANSI_RED;
         }
 
+        /**
+         * Obtiene color y descuenta cantidad de recurso restante.
+         * @return
+         */
         public String readCharacter() {
 
                 String readed = getColor() + ANSI_BOLD ;//+ String.valueOf( contentFile.charAt(0) ) + ANSI_RESET ;
                 
-                // contentFile = contentFile.substring(1);
-
                 if(charactersRemaining > 0){
                         charactersRemaining -= 1;
                 }

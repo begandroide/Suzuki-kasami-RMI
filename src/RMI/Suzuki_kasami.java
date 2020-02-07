@@ -157,9 +157,9 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
 
         public void initializeExtractProcess(Token token) throws RemoteException {
                 printRN();
-                // broadcast request
+                // broadcast petición acceso a SC
                 RN.set(index, RN.get(index) + 1);
-                
+                //enviamos petición a todos los demas procesos del algoritmo
                 for (String url : urls) {
                         Suzuki_kasami_rmi dest;
                         try {
@@ -169,11 +169,13 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                         }
                 }
                 if(token != null) {
+                        //si tenemos token, iniciar extracción
                         inCriticalSection = true;
                         this.token = (Token) token;
                         processState.status = Status.CRITICALSECTION;
                         printStatus();
                 } else{
+                        //esperamos token
                         waitToken();
                 }
                 if( killed == false ){
@@ -198,13 +200,13 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
          * en el algoritmo.
          */
         private void reset() {
-
+                //re-iniciar arreglo RN
                 this.RN = new ArrayList<Integer>(numProcesses);
                 for (int i = 0; i < numProcesses; i++) {
                         RN.add(0);
                 }
+                //Estado idle del proceso
                 processState = new ProcessState();
-
                 token = null;
                 inCriticalSection = false;
         }
@@ -216,8 +218,10 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
          */
         private String readWrite(int cantidad){
                 String readed = "";
+                //lineas del archivo, para eliminar cuando extraemos
                 List<String> lines = null;
                 try (
+                        //buffer para leer letras a extraer
                         BufferedReader bReader = new BufferedReader(new FileReader(token.getFileName()));
                 ) {
                         Path path = FileSystems.getDefault().getPath("", token.getFileName());
@@ -228,11 +232,15 @@ public class Suzuki_kasami extends UnicastRemoteObject implements Suzuki_kasami_
                         while(readed.length() < cantidad){
                                 String line = lines.get(index);
                                 if(line.length() < sacaTmp){
+                                        //si debe leer mas de una linea
                                         readed += line;
                                         sacaTmp -= line.length();
+                                        //removermos linea
                                         lines.remove(index);
                                 } else{
+                                        //si lee menos de una linea
                                         readed += line.substring(0, sacaTmp);
+                                        //removemos lo extraido
                                         lines.set(index,line.substring(sacaTmp,line.length()));
                                         index++;
                                 }
