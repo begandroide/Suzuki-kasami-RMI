@@ -32,7 +32,9 @@ Donde
 - delay: Cuanto esperamos para dar el token desde el thread principal
 - bearer: id del proceso que tendrá el token
 
-# Consideración
+# Consideraciones
+
+## Se agrega función remota
 
 Se ha añadido una función más al objeto remoto (rmi), la cual es usada para inicializar el proceso de extracción:
 
@@ -48,6 +50,13 @@ Se ha añadido una función más al objeto remoto (rmi), la cual es usada para i
 Se implementa la función anterior debido a que una vez inicializados todos los procesos, hacía falta un método que inicialize el algoritmo;
 cabe mencionar que la función **initializeExtractProcess** es un método que encapsula el request del token, la espera del mismo, y maneja el ingreso a la sección crítica. Sin esta función, cada proceso debía hacer 
 más operaciones o llamadas al proceso remoto; por lo que nos ayuda con la simplicidad.
+
+## Se modifica tiempo de enfriamiento
+
+
+<img src="https://i.imgur.com/IxO8lLP.png" height="300"  style="float: center;"/>
+
+Como vemos en el código adjunto en la imagen, se ha modificado el tiempo de enfriamiento, debido a que en otros casos de  pruebas (no existentes en rúbrica) la sincronización no era adecuada. Se propone dividir en dos la capacidad y luego dividir el resultado por la velocidad; entregó buenos resultados, por lo que se deja la modificación.
 
 # Ejemplo de uso
 
